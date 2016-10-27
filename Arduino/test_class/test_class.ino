@@ -30,7 +30,7 @@ class Axis {
         digitalWrite(sep, LOW);
         state_step = false;
         step_count--;
-        if (dir == true) {
+        if (digitalRead(dir)== HIGH) {
           axis_position = axis_position - distancePerStep;
         } else {
           axis_position = axis_position + distancePerStep;
@@ -45,18 +45,21 @@ class Axis {
       } else {
         digitalWrite(dir, HIGH);
       }
-      delay(100);
     }
 
   public: void G1(double point) {
-      double temp = axis_position - point ;
-      setStep(fabs(temp) / distancePerStep);
-      //      setStep(100);
-      if (temp > 0) {
+      double temp = point - axis_position ;
+      Serial.println(temp);
+      
+      if(temp < 0) {
         setDir(false);
+        digitalWrite(dir, HIGH);
       } else {
         setDir(true);
+        digitalWrite(dir, LOW);
       }
+      
+      setStep(fabs(temp) / distancePerStep);
       move_enable = true;
     }
 
@@ -95,9 +98,51 @@ void setup() {
 
 }
 
+
+int count, temp_position;
+
 void loop() {
 
-  x.G1(1);
+  while (Serial.available() == 0) { }
+  String cmd_input = Serial.readString() ;
+  cmd_input.replace(" ", "");
+  cmd_input.toUpperCase();;
+
+  if (cmd_input[0] == 'G') {
+    if (cmd_input[1] == '1') {
+
+      if (cmd_input.indexOf('X') != -1) {
+        count = 1;
+        temp_position = cmd_input.indexOf('X');
+        while ( (temp_position + count < cmd_input.length()) && ((cmd_input.charAt(temp_position + count) == '0') || (cmd_input.charAt(temp_position + count) == '1')
+                || (cmd_input.charAt(temp_position + count) == '2') || (cmd_input.charAt(temp_position + count) == '3') || (cmd_input.charAt(temp_position + count) == '4')
+                || (cmd_input.charAt(temp_position + count) == '5') || (cmd_input.charAt(temp_position + count) == '6') || (cmd_input.charAt(temp_position + count) == '7')
+                || (cmd_input.charAt(temp_position + count) == '8') || (cmd_input.charAt(temp_position + count) == '9') || (cmd_input.charAt(temp_position + count) == '.')
+                || (cmd_input.charAt(temp_position + count) == '-'))) {
+          count++;
+        }
+        double CMD_X = (cmd_input.substring(temp_position + 1, temp_position + count)).toFloat() ;
+        x.G1(CMD_X);
+      }
+
+      if (cmd_input.indexOf('Y') != -1) {
+        count = 1;
+        temp_position = cmd_input.indexOf('Y');
+        while ( (temp_position + count < cmd_input.length()) && ((cmd_input.charAt(temp_position + count) == '0') || (cmd_input.charAt(temp_position + count) == '1')
+                || (cmd_input.charAt(temp_position + count) == '2') || (cmd_input.charAt(temp_position + count) == '3') || (cmd_input.charAt(temp_position + count) == '4')
+                || (cmd_input.charAt(temp_position + count) == '5') || (cmd_input.charAt(temp_position + count) == '6') || (cmd_input.charAt(temp_position + count) == '7')
+                || (cmd_input.charAt(temp_position + count) == '8') || (cmd_input.charAt(temp_position + count) == '9') || (cmd_input.charAt(temp_position + count) == '.')
+                || (cmd_input.charAt(temp_position + count) == '-'))) {
+          count++;
+        }
+        double CMD_Y = (cmd_input.substring(temp_position + 1, temp_position + count)).toFloat() ;
+        y.G1(CMD_Y);
+      }
+      
+    }
+  }
+
+
   timedAction_x.reset();
   timedAction_y.reset();
   Serial.println("Start");
@@ -115,7 +160,7 @@ void loop() {
       y.move_enable = false;
     }
   }
-  y.G1(1);
+
   Serial.println(x.where());
   Serial.println(y.where());
   Serial.println("END");
