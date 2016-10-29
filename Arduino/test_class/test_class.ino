@@ -71,8 +71,8 @@ class Axis {
 
 
 
-Axis x(10, 11, 600);
-Axis y(12, 13, 173);
+Axis x(10, 11, 236);
+Axis y(12, 13, 176);
 
 void check_x() {
   if (x.step_count > 0) {
@@ -86,8 +86,8 @@ void check_y() {
   }
 }
 
-TimedAction timedAction_x = TimedAction(5000, check_x);
-TimedAction timedAction_y = TimedAction(17000, check_y);
+TimedAction timedAction_x = TimedAction(1200, check_x);
+TimedAction timedAction_y = TimedAction(750, check_y);
 
 
 
