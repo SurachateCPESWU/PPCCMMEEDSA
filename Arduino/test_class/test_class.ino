@@ -30,7 +30,7 @@ class Axis {
         digitalWrite(sep, LOW);
         state_step = false;
         step_count--;
-        if (digitalRead(dir)== HIGH) {
+        if (digitalRead(dir) == HIGH) {
           axis_position = axis_position - distancePerStep;
         } else {
           axis_position = axis_position + distancePerStep;
@@ -50,15 +50,15 @@ class Axis {
   public: void G1(double point) {
       double temp = point - axis_position ;
       Serial.println(temp);
-      
-      if(temp < 0) {
+
+      if (temp < 0) {
         setDir(false);
         digitalWrite(dir, HIGH);
       } else {
         setDir(true);
         digitalWrite(dir, LOW);
       }
-      
+
       setStep(fabs(temp) / distancePerStep);
       move_enable = true;
     }
@@ -87,10 +87,36 @@ void check_y() {
 }
 
 TimedAction timedAction_x = TimedAction(1200, check_x);
-TimedAction timedAction_y = TimedAction(750, check_y);
+TimedAction timedAction_y = TimedAction(1609, check_y);
+
+void cal_delay(double cmdx, double cmdy) {
+  double temp1 = fabs(cmdx - x.axis_position) ;
+  double temp2 = fabs(cmdy - y.axis_position) ;
+  if (temp1 > temp2) {
+    Serial.println("Staxxxxrt");
+    timedAction_x.setInterval(1200);
+    timedAction_y.setInterval((temp1 * 236 * 1200) / (temp2 * 176));
+  } else {
+    Serial.println("xxxxxxxxx");
+    timedAction_y.setInterval(1609);
+    timedAction_x.setInterval((temp2 * 176 * 1609) / (temp1 * 236));
+  }
+}
 
 
 
+
+
+//void cal_delay(double cmdx,double cmdy){
+//  if(cmdx*1200/x.distancePerStep>cmdy*750/y.distancePerStep){
+//    timedAction_x.setInterval(1200);
+//    timedAction_y.setInterval((cmdx*1200*x.distancePerStep)/cmdy);
+//  }else{
+//    timedAction_y.setInterval(750);
+//    timedAction_x.setInterval((cmdy*750*y.distancePerStep)/cmdx);
+//  }
+//
+//}
 
 void setup() {
 
@@ -102,7 +128,6 @@ void setup() {
 int count, temp_position;
 
 void loop() {
-
   while (Serial.available() == 0) { }
   String cmd_input = Serial.readString() ;
   cmd_input.replace(" ", "");
@@ -110,7 +135,7 @@ void loop() {
 
   if (cmd_input[0] == 'G') {
     if (cmd_input[1] == '1') {
-
+      double CMD_X, CMD_Y;
       if (cmd_input.indexOf('X') != -1) {
         count = 1;
         temp_position = cmd_input.indexOf('X');
@@ -121,7 +146,7 @@ void loop() {
                 || (cmd_input.charAt(temp_position + count) == '-'))) {
           count++;
         }
-        double CMD_X = (cmd_input.substring(temp_position + 1, temp_position + count)).toFloat() ;
+        CMD_X = (cmd_input.substring(temp_position + 1, temp_position + count)).toFloat() ;
         x.G1(CMD_X);
       }
 
@@ -135,10 +160,10 @@ void loop() {
                 || (cmd_input.charAt(temp_position + count) == '-'))) {
           count++;
         }
-        double CMD_Y = (cmd_input.substring(temp_position + 1, temp_position + count)).toFloat() ;
+        CMD_Y = (cmd_input.substring(temp_position + 1, temp_position + count)).toFloat() ;
         y.G1(CMD_Y);
       }
-      
+      cal_delay(CMD_X, CMD_Y);
     }
   }
 
