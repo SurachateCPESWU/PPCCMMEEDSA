@@ -86,7 +86,7 @@ void check_y() {
   }
 }
 
-TimedAction timedAction_x = TimedAction(1200, check_x);
+TimedAction timedAction_x = TimedAction(1300, check_x);
 TimedAction timedAction_y = TimedAction(1609, check_y);
 
 void cal_delay(double cmdx, double cmdy) {
@@ -94,8 +94,8 @@ void cal_delay(double cmdx, double cmdy) {
   double temp2 = fabs(cmdy - y.axis_position) ;
   if (temp1 > temp2) {
     Serial.println("Staxxxxrt");
-    timedAction_x.setInterval(1200);
-    timedAction_y.setInterval((temp1 * 236 * 1200) / (temp2 * 176));
+    timedAction_x.setInterval(1300);
+    timedAction_y.setInterval((temp1 * 236 * 1300) / (temp2 * 176));
   } else {
     Serial.println("xxxxxxxxx");
     timedAction_y.setInterval(1609);
