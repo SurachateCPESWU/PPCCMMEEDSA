@@ -1,5 +1,9 @@
 package project_kuykuy;
 
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.UIManager;
 import marvin.MarvinDefinitions;
 import static marvin.MarvinPluginCollection.scale;
@@ -27,6 +31,8 @@ public class MainFrame extends javax.swing.JFrame {
     private static MarvinImagePanel picFrame;
     private static MarvinImage in_img;
     private static MarvinImage backup_img;
+    public static ArrayList<Integer> po_x = new ArrayList<Integer>();
+    public static ArrayList<Integer> po_y = new ArrayList<Integer>();
 
     /**
      * Creates new form MainFrame
@@ -35,11 +41,29 @@ public class MainFrame extends javax.swing.JFrame {
         initComponents();
         picFrame = new MarvinImagePanel();
         in_img = new MarvinImage();
-        in_img = MarvinImageIO.loadImage("C:/Users/OISHI/Desktop/simple-pcb-layout01.png");
-        backup_img = MarvinImageIO.loadImage("C:/Users/OISHI/Desktop/simple-pcb-layout01.png");
+        in_img = MarvinImageIO.loadImage("C:/Users/OISHI/Desktop/500.png");
+        backup_img = MarvinImageIO.loadImage("C:/Users/OISHI/Desktop/500.png");
         picFrame.setImage(in_img);
         picScrol.setViewportView(picFrame);
 
+    }
+
+    public void segment_obb(int x, int y) {
+        in_img.setBinaryColor(x, y, false);
+        po_x.add(x);
+        po_y.add(y);
+//        System.out.println("x = " + x);
+//        System.out.println("y = " + y);
+        if (in_img.getBinaryColor(x, y + 1) == true) {
+            segment_obb(x, y + 1);
+        } else if (in_img.getBinaryColor(x + 1, y) == true) {
+            segment_obb(x + 1, y);
+        } else if (in_img.getBinaryColor(x - 1, y) == true) {
+            segment_obb(x - 1, y);
+        } else if (in_img.getBinaryColor(x, y - 1) == true) {
+            segment_obb(x, y - 1);
+        }
+        
     }
 
     /**
@@ -56,6 +80,7 @@ public class MainFrame extends javax.swing.JFrame {
         bt_zoomout = new javax.swing.JButton();
         bt_browse = new javax.swing.JButton();
         bt_findedge = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -91,6 +116,13 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
 
+        jButton1.setText("Test");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -104,7 +136,9 @@ public class MainFrame extends javax.swing.JFrame {
                         .addComponent(bt_zoomout, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(bt_zoomin, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(bt_browse, javax.swing.GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE))
-                    .addComponent(bt_findedge, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(jButton1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(bt_findedge, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 72, Short.MAX_VALUE)))
                 .addGap(0, 23, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -112,14 +146,16 @@ public class MainFrame extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(32, 32, 32)
-                        .addComponent(bt_browse, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
+                        .addGap(57, 57, 57)
+                        .addComponent(bt_browse)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(bt_zoomin)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(bt_zoomout)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(bt_findedge))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(bt_findedge)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton1))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(picScrol, javax.swing.GroupLayout.PREFERRED_SIZE, 350, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -154,6 +190,26 @@ public class MainFrame extends javax.swing.JFrame {
         picFrame.update();
 
     }//GEN-LAST:event_bt_findedgeActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+
+        in_img = rgbToBinary(in_img.clone(), 100);
+        imagePlugin = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.morphological.boundary.jar");
+        imagePlugin.process(in_img.clone(), in_img);
+        picFrame.setImage(in_img);
+        picFrame.update();
+        
+        for (int y = 1; y < in_img.getHeight(); y++) {
+            
+            for (int x = 1; x < in_img.getWidth(); x++) {
+                
+                if (in_img.getBinaryColor(x, y) == true) {
+                    segment_obb(x, y);
+                }
+            }
+        }
+
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -190,7 +246,6 @@ public class MainFrame extends javax.swing.JFrame {
                     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 } catch (Exception e) {
                 }
-
                 new MainFrame().setVisible(true);
             }
         });
@@ -201,6 +256,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JButton bt_findedge;
     private javax.swing.JButton bt_zoomin;
     private javax.swing.JButton bt_zoomout;
+    private javax.swing.JButton jButton1;
     private javax.swing.JScrollPane picScrol;
     // End of variables declaration//GEN-END:variables
 }
